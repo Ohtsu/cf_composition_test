@@ -1,0 +1,32 @@
+version: '1.0'
+steps:
+  create_test_data_step: 
+    title: Creating dummy data
+    image: alpine
+    commands:
+      - echo "Writing in shared volume" > /codefresh/volume/sample_text.txt 
+  my_sample_composition:
+    type: composition
+    title: Composition with volume
+    composition:
+      version: '2'
+      services:
+        my_sample_service:
+          image: node
+          volumes:
+            - '${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}'
+          working_dir: '${{CF_VOLUME_PATH}}'
+          command: bash -c "pwd && cat sample_text.txt"
+    composition_candidates:
+      my_unit_tests:
+        image: python
+        volumes:
+          - '${{CF_VOLUME_NAME}}:${{CF_VOLUME_PATH}}'
+        working_dir: '${{CF_VOLUME_PATH}}'
+        command: bash -c "pwd && echo 'Finished tests' > test_result.txt"
+  read_test_data_step:
+    title: Reading dummy data
+    image: alpine
+    commands:
+      - ls -l /codefresh/volume
+      - cat /codefresh/volume/test_result.txt 
